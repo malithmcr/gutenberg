@@ -1,9 +1,4 @@
 /**
- * External dependencies
- */
-import { includes } from 'lodash';
-
-/**
  * WordPress dependencies
  */
 import { useState } from '@wordpress/element';
@@ -58,8 +53,7 @@ function InserterMenu( {
 	const showPatterns = ! destinationRootClientId && hasPatterns;
 	const onKeyDown = ( event ) => {
 		if (
-			includes(
-				[ LEFT, DOWN, RIGHT, UP, BACKSPACE, ENTER ],
+			[ LEFT, DOWN, RIGHT, UP, BACKSPACE, ENTER ].includes(
 				event.keyCode
 			)
 		) {

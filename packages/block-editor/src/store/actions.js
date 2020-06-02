@@ -1,7 +1,7 @@
 /**
  * External dependencies
  */
-import { castArray, first, get, includes, last, some } from 'lodash';
+import { castArray, first, get, last, some } from 'lodash';
 
 /**
  * WordPress dependencies
@@ -265,7 +265,7 @@ function getBlocksWithDefaultStylesApplied( blocks, blockEditorSettings ) {
 			return block;
 		}
 		const className = get( block, [ 'attributes', 'className' ] );
-		if ( includes( className, 'is-style-' ) ) {
+		if ( className?.includes( 'is-style-' ) ) {
 			return block;
 		}
 		const { attributes = {} } = block;

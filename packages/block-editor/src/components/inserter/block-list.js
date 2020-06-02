@@ -1,15 +1,7 @@
 /**
  * External dependencies
  */
-import {
-	map,
-	includes,
-	findIndex,
-	flow,
-	sortBy,
-	groupBy,
-	isEmpty,
-} from 'lodash';
+import { map, findIndex, flow, sortBy, groupBy, isEmpty } from 'lodash';
 
 /**
  * WordPress dependencies
@@ -65,7 +57,7 @@ export function InserterBlockList( {
 
 	const childItems = useMemo( () => {
 		return filteredItems.filter( ( { name } ) =>
-			includes( rootChildBlocks, name )
+			rootChildBlocks?.includes( name )
 		);
 	}, [ filteredItems, rootChildBlocks ] );
 
