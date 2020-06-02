@@ -15,6 +15,7 @@ import { DOWN } from '@wordpress/keycodes';
  */
 import HeadingLevelChecker from './heading-level-checker';
 import HeadingLevelIcon from './heading-level-icon';
+import useIsHeadingLevelValid from './use-is-heading-level-valid';
 
 const HEADING_LEVELS = [ 1, 2, 3, 4, 5, 6 ];
 
@@ -48,6 +49,8 @@ export default function HeadingLevelDropdown( {
 	selectedLevel,
 	onChange,
 } ) {
+	const levelIsInvalid = useIsHeadingLevelValid( clientId, selectedLevel );
+
 	return (
 		<Dropdown
 			popoverProps={ POPOVER_PROPS }
@@ -64,7 +67,15 @@ export default function HeadingLevelDropdown( {
 					<ToolbarButton
 						aria-expanded={ isOpen }
 						aria-haspopup="true"
-						icon={ <HeadingLevelIcon level={ selectedLevel } /> }
+						className="block-library-heading__heading-level-dropdown-button"
+						icon={
+							<>
+								<HeadingLevelIcon level={ selectedLevel } />
+								{ levelIsInvalid && (
+									<span className="block-library-heading__heading-level-dropdown-button-invalid-indicator" />
+								) }
+							</>
+						}
 						label={ __( 'Change heading level' ) }
 						onClick={ onToggle }
 						onKeyDown={ openOnArrowDown }
@@ -113,7 +124,10 @@ export default function HeadingLevelDropdown( {
 							} ) }
 						/>
 					</Toolbar>
-					<HeadingLevelChecker selectedHeadingId={ clientId } />
+					<HeadingLevelChecker
+						levelIsInvalid={ levelIsInvalid }
+						selectedLevel={ selectedLevel }
+					/>
 				</>
 			) }
 		/>

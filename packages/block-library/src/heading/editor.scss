@@ -7,12 +7,22 @@
 	min-width: 230px;
 }
 
+.block-library-heading__heading-level-dropdown-button-invalid-indicator {
+	background-color: $alert-yellow;
+	height: 8px;
+	width: 8px;
+	position: absolute;
+	bottom: 6px;
+	left: 20px;
+	border-radius: 50%;
+}
+
 // The dropdown already has a border, so we can remove the one on the heading
 // level toolbar.
 .block-library-heading-level-toolbar {
 	border: none;
 }
 
-.block-library-heading__heading-level-checker {
+.block-library-heading__heading-level-checker-warning {
 	margin: 0;
 }
