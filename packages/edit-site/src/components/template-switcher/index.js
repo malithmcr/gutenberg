@@ -124,7 +124,7 @@ export default function TemplateSwitcher( {
 				templateParts: theme
 					? getEntityRecords( 'postType', 'wp_template_part', {
 							resolved: true,
-							theme: theme?.stylesheet,
+							theme: theme.stylesheet,
 					  } )
 					: null,
 			};
