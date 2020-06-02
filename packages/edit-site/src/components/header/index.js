@@ -168,11 +168,9 @@ export default function Header( {
 						/
 					</div>
 					<TemplateSwitcher
-						templatePartIds={ settings.templatePartIds }
 						page={ settings.page }
 						activeId={ settings.templateId }
 						activeTemplatePartId={ settings.templatePartId }
-						homeId={ settings.homeTemplateId }
 						isTemplatePart={
 							settings.templateType === 'wp_template_part'
 						}

@@ -2,8 +2,9 @@
  * WordPress dependencies
  */
 import { __ } from '@wordpress/i18n';
-import { useSelect, useDispatch } from '@wordpress/data';
-import { useState } from '@wordpress/element';
+import { addQueryArgs } from '@wordpress/url';
+import { resolveSelect, useDispatch, useSelect } from '@wordpress/data';
+import { useEffect, useState } from '@wordpress/element';
 import apiFetch from '@wordpress/api-fetch';
 import {
 	Tooltip,
@@ -19,6 +20,11 @@ import { Icon, home, plus, undo } from '@wordpress/icons';
  */
 import TemplatePreview from './template-preview';
 import ThemePreview from './theme-preview';
+
+/**
+ * Browser dependencies
+ */
+const { fetch } = window;
 
 const TEMPLATE_OVERRIDES = {
 	page: ( slug ) => `page-${ slug }`,
@@ -47,11 +53,9 @@ function TemplateLabel( { template, homeId } ) {
 }
 
 export default function TemplateSwitcher( {
-	templatePartIds,
 	page,
 	activeId,
 	activeTemplatePartId,
-	homeId,
 	isTemplatePart,
 	onActiveIdChange,
 	onActiveTemplatePartIdChange,
@@ -71,51 +75,79 @@ export default function TemplateSwitcher( {
 		setThemePreviewVisible( () => false );
 	};
 
+	const [ homeId, setHomeId ] = useState();
+
+	useEffect( () => {
+		const effect = async () => {
+			try {
+				const { success, data } = await fetch(
+					addQueryArgs( '/', { '_wp-find-template': true } )
+				).then( ( res ) => res.json() );
+				if ( success ) {
+					let newHomeId = data.ID;
+					if ( newHomeId === null ) {
+						const { getEntityRecords } = resolveSelect( 'core' );
+						newHomeId = (
+							await getEntityRecords( 'postType', 'wp_template', {
+								resolved: true,
+								slug: data.post_name,
+							} )
+						 )[ 0 ].id;
+					}
+					setHomeId( newHomeId );
+				} else {
+					throw new Error();
+				}
+			} catch ( err ) {
+				setHomeId( null );
+			}
+		};
+		effect();
+	}, [] );
+
 	const { currentTheme, template, templateParts } = useSelect(
-		( select ) => {
-			const { getCurrentTheme, getEntityRecord } = select( 'core' );
-			const _template = getEntityRecord(
-				'postType',
-				'wp_template',
-				activeId
-			);
+		( _select ) => {
+			const {
+				getCurrentTheme,
+				getEntityRecord,
+				getEntityRecords,
+			} = _select( 'core' );
+			const theme = getCurrentTheme();
+
 			return {
-				currentTheme: getCurrentTheme(),
-				template: {
-					label: _template ? (
-						<TemplateLabel
-							template={ _template }
-							homeId={ homeId }
-						/>
-					) : (
-						__( 'Loading…' )
-					),
-					value: activeId,
-					slug: _template ? _template.slug : __( 'Loading…' ),
-					content: _template?.content,
-				},
-				templateParts: templatePartIds.map( ( id ) => {
-					const templatePart = getEntityRecord(
-						'postType',
-						'wp_template_part',
-						id
-					);
-					return {
-						label: templatePart ? (
-							<TemplateLabel template={ templatePart } />
-						) : (
-							__( 'Loading…' )
-						),
-						value: id,
-						slug: templatePart
-							? templatePart.slug
-							: __( 'Loading…' ),
-					};
-				} ),
+				currentTheme: theme,
+				template: getEntityRecord(
+					'postType',
+					'wp_template',
+					activeId
+				),
+				templateParts: theme
+					? getEntityRecords( 'postType', 'wp_template_part', {
+							resolved: true,
+							theme: theme?.stylesheet,
+					  } )
+					: null,
 			};
 		},
-		[ activeId, templatePartIds, homeId ]
+		[ activeId ]
 	);
+
+	const templateItem = {
+		label: template ? (
+			<TemplateLabel template={ template } homeId={ homeId } />
+		) : (
+			__( 'Loading…' )
+		),
+		value: activeId,
+		slug: template ? template.slug : __( 'Loading…' ),
+		content: template?.content,
+	};
+
+	const templatePartItems = templateParts?.map( ( templatePart ) => ( {
+		label: <TemplateLabel template={ templatePart } />,
+		value: templatePart.id,
+		slug: templatePart.slug,
+	} ) );
 
 	const { saveEntityRecord } = useDispatch( 'core' );
 
@@ -128,16 +160,16 @@ export default function TemplateSwitcher( {
 			slug: overwriteSlug,
 			title: overwriteSlug,
 			status: 'publish',
-			content: template.content.raw,
+			content: templateItem.content.raw,
 		} );
 		onAddTemplateId( newTemplate.id );
 	};
 	const unoverwriteTemplate = async () => {
 		await apiFetch( {
-			path: `/wp/v2/templates/${ template.value }`,
+			path: `/wp/v2/templates/${ activeId }`,
 			method: 'DELETE',
 		} );
-		onRemoveTemplateId( template.value );
+		onRemoveTemplateId( activeId );
 	};
 
 	return (
@@ -151,8 +183,8 @@ export default function TemplateSwitcher( {
 				label={ __( 'Switch Template' ) }
 				toggleProps={ {
 					children: ( isTemplatePart
-						? templateParts
-						: [ template ]
+						? templatePartItems
+						: [ templateItem ]
 					).find(
 						( choice ) =>
 							choice.value ===
@@ -166,10 +198,10 @@ export default function TemplateSwitcher( {
 							<MenuItem
 								onClick={ () => onActiveIdChange( activeId ) }
 							>
-								{ template.label }
+								{ templateItem.label }
 							</MenuItem>
 							{ overwriteSlug &&
-								overwriteSlug !== template.slug && (
+								overwriteSlug !== templateItem.slug && (
 									<MenuItem
 										icon={ plus }
 										onClick={ overwriteTemplate }
@@ -177,7 +209,7 @@ export default function TemplateSwitcher( {
 										{ __( 'Overwrite Template' ) }
 									</MenuItem>
 								) }
-							{ overwriteSlug === template.slug && (
+							{ overwriteSlug === templateItem.slug && (
 								<MenuItem
 									icon={ undo }
 									onClick={ unoverwriteTemplate }
@@ -188,7 +220,7 @@ export default function TemplateSwitcher( {
 						</MenuGroup>
 						<MenuGroup label={ __( 'Template Parts' ) }>
 							<MenuItemsChoice
-								choices={ templateParts }
+								choices={ templatePartItems }
 								value={
 									isTemplatePart
 										? activeTemplatePartId
