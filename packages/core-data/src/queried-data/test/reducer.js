@@ -115,7 +115,6 @@ describe( 'reducer', () => {
 		} );
 		const state = reducer( original, {
 			type: 'REMOVE_ITEMS',
-			query: [ 3 ],
 			items: [ 3 ],
 		} );
 
