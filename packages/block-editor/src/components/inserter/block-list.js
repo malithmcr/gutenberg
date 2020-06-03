@@ -56,9 +56,11 @@ export function InserterBlockList( {
 	}, [ filterValue, items, categories, collections ] );
 
 	const childItems = useMemo( () => {
-		return filteredItems.filter( ( { name } ) =>
-			rootChildBlocks?.includes( name )
-		);
+		return rootChildBlocks
+			? filteredItems.filter( ( { name } ) =>
+					rootChildBlocks?.includes( name )
+			  )
+			: [];
 	}, [ filteredItems, rootChildBlocks ] );
 
 	const suggestedItems = useMemo( () => {
